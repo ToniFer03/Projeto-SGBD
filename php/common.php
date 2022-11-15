@@ -3,7 +3,7 @@
 //declaração de variaveis
 $clientsideval = 0;
 
-function voltarAtras(){
+function voltarAtras(){ //função para voltar atrás
     echo "<script type='text/javascript'>document.write(\"<a href='javascript:history.back()' 
     class='backLink' title='Voltar atr&aacute;s'>Voltar atr&aacute;s</a>\");</script>
     <noscript>
@@ -11,7 +11,7 @@ function voltarAtras(){
     </noscript>";
 }
 
-function get_enum_values($connection, $table, $column){
+function get_enum_values($connection, $table, $column){ //função para buscar o número de linhas a construir
     $query = " SHOW COLUMNS FROM `$table` LIKE '$column' ";
     $result = mysqli_query($connection, $query );
     $row = mysqli_fetch_array($result , MYSQLI_NUM );
