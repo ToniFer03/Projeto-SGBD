@@ -23,13 +23,16 @@ if (is_user_logged_in()){ //checks if the user is logged in
             if($num_child == 0){
                 print("Não há crianças!");
             } else {
-                //debugging message
-                print("Há crianças!");
+                $collums = array("Nome", "Data de nascimento", "Enc. de educação",
+            "Telefone do Enc.", "e-mail");
+            $orderColumn = "name";
+                create_table($link, $collums, $table, $orderColumn);
             }
             //caso existam mostrar uma tabela com todas as crianças
             //ordenado por ordem alfabetica
             //após a tabela
             echo "<h3> Dados de registo - introdução </h3>";
+            echo "<p> Introduza os dados pessoais básicos da criança: ";
         }
     } else {
         print "Não têm autorização para aceder a esta página!";
@@ -38,6 +41,7 @@ if (is_user_logged_in()){ //checks if the user is logged in
     //Just a debbugin line
     print "user is not logged in";
 }
+
 
 
 /* 
@@ -56,5 +60,42 @@ function count_rows($connection, $table){
     //processamento do resultado da query
     $row = mysqli_fetch_array($result, MYSQLI_NUM);
     return $row[0];
+}
+
+//função para a criação de uma tabela
+function create_table($connection, $collums, $table, $orderColumn){
+    echo "<table>";
+    
+    //cria os titulos das colunas
+    echo "<tr>";
+    foreach ($collums as $value){
+        echo "<td> $value </td>";
+    };
+    echo "</tr>";
+
+    //criar todas as linhas da tabela com todos os valores
+    $result = get_all_rows($connection, $table, $orderColumn);
+    while ($row = mysqli_fetch_array($result, MYSQLI_NUM)){
+        echo "<tr> 
+        <td>$row[1]</td>
+        <td>$row[2]</td>
+        <td>$row[3]</td>
+        <td>$row[4]</td>
+        <td>$row[5]</td>
+        </tr>";
+    }
+
+    echo"</table>";
+}
+
+//função que recebe todas as linhas de uma tabela, ordenada
+function get_all_rows($connection, $table, $orderColumn){
+    //criação da query
+    $query = "Select * from $table ";
+    $query = $query . "Order By $orderColumn";
+
+    //execução da query
+    $result = mysqli_query($connection, $query);
+    return $result;
 }
 ?>
