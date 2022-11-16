@@ -1,5 +1,5 @@
 <?php
-require_once "/opt/bitnami/apps/wordpress/custom/php/common.php";
+require_once "custom/php/common.php";
 
 //declaração de variáveis
 $capability = 'manage_records';
