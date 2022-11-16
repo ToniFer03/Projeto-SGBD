@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 //declaração de variaveis
 $clientsideval = 0;
