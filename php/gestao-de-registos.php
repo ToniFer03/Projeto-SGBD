@@ -24,10 +24,9 @@ if (is_user_logged_in()){ //checks if the user is logged in
                 print("Não há crianças!");
             } else {
                 $collums = array("Nome", "Data de nascimento", "Enc. de educação",
-            "Telefone do Enc.", "e-mail");
+            "Telefone do Enc.", "e-mail", "registos");
             $orderColumn = "name";
                 create_table($link, $collums, $table, $orderColumn);
-                //get_values_child($link);
             }
             //caso existam mostrar uma tabela com todas as crianças
             //ordenado por ordem alfabetica
@@ -82,7 +81,10 @@ function create_table($connection, $collums, $table, $orderColumn){
         <td>$row[2]</td>
         <td>$row[3]</td>
         <td>$row[4]</td>
-        <td>$row[5]</td>
+        <td>$row[5]</td>";
+
+        $string = get_values_child($connection, $row[0]);
+        echo "<td>$string</td>
         </tr>";
     }
 
@@ -100,16 +102,59 @@ function get_all_rows($connection, $table, $orderColumn){
     return $result;
 }
 
+/*
+talvez para executar o pretendido seja necessário ir buscar num primeiro query
+os tipos (Austismo...), e ir buscar linha os subitens e valores de cada um
+*/
+
 //função que busca todos os valores das crianças
-function get_values_child($connection){
-    //example of the query line to be used
-    //SELECT * FROM value, item, subitem, child where child.id = value.child_id and value.subitem_id = subitem.id and subitem.item_id = item.id;
-    //query = "Select * from value, child where value.child_id = child.id";
+function get_values_child($connection, $child_wanted){
+    //variáveis a serem usadas nas queries
+    $collums = array("value.value", "subitem.name", "item.name");
+    $tables = array("child, value, item, subitem");
+    $conditions = array("$child_wanted = value.child_id", "value.subitem_id = subitem.id", "subitem.item_id = item.id");
+    $order = "item.name";
+
+    //criação da query
+    $query = "Select ". implode(",", $collums) . " ";
+    $query = $query . "From ". implode(",", $tables) . " ";
+    $query = $query . "where " . implode(" and ", $conditions) . " ";
+    $query = $query . "Order by $order";
+    
+    
+    //execução da query
     $result = mysqli_query($connection, $query);
     
-    while ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)){
-
+    $hasBegun = FALSE;
+    $hasbegun2 = FALSE;
+    $string = "";
+    while ($row = mysqli_fetch_array($result, MYSQLI_NUM)){
+        if(!$hasbegun2) {
+            if(!$hasBegun){
+                $stringItemName = $row[2];
+                $string = $string . $stringItemName . ": ";
+                $string = $string . $row[1] . " ";
+                $string = $string . "(" . $row[0] . ");";
+            } else if ($stringItemName != $row[2]) {
+                $stringItemName = $row[2];
+                $string = $string . $stringItemName . ": ";
+                $string = $string . $row[1] . " ";
+                $string = $string . "(" . $row[0] . ");";
+            } else if ($stringItemName == $row[2]) {
+                $string = $string . $row[1] . " ";
+                $string = $string . "(" . $row[0] . ") ";
+            }
+            $hasBegun = TRUE;
+            $hasbegun2 = TRUE;
+            $test = $row[1];
+        } else if ($test == $row[1]) {
+            //Do nothing
+        } else {
+            $hasbegun2 = FALSE;
+        }
     }
+    
+    return $string;
 }
 
 ?>
