@@ -27,6 +27,7 @@ if (is_user_logged_in()){ //checks if the user is logged in
             "Telefone do Enc.", "e-mail");
             $orderColumn = "name";
                 create_table($link, $collums, $table, $orderColumn);
+                //get_values_child($link);
             }
             //caso existam mostrar uma tabela com todas as crianças
             //ordenado por ordem alfabetica
@@ -62,7 +63,7 @@ function count_rows($connection, $table){
     return $row[0];
 }
 
-//função para a criação de uma tabela
+//função para a criação da tabela
 function create_table($connection, $collums, $table, $orderColumn){
     echo "<table>";
     
@@ -98,4 +99,17 @@ function get_all_rows($connection, $table, $orderColumn){
     $result = mysqli_query($connection, $query);
     return $result;
 }
+
+//função que busca todos os valores das crianças
+function get_values_child($connection){
+    //example of the query line to be used
+    //SELECT * FROM value, item, subitem, child where child.id = value.child_id and value.subitem_id = subitem.id and subitem.item_id = item.id;
+    //query = "Select * from value, child where value.child_id = child.id";
+    $result = mysqli_query($connection, $query);
+    
+    while ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)){
+
+    }
+}
+
 ?>
