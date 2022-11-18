@@ -1,10 +1,10 @@
 <?php
 require_once "custom/php/common.php";
 
-//declaração de variáveis
+//declaração de variáveis 
 $capability = 'manage_records';
 $databaseip = 'localhost';
-$username = 'root';
+$username = 'root';                         
 $password = 'sgbdc4';
 $databaseName = 'bitnami_wordpress';
 $errorMessage = "An error has occured";
@@ -82,9 +82,15 @@ function create_table($connection, $collums, $table, $orderColumn){
         <td>$row[3]</td>
         <td>$row[4]</td>
         <td>$row[5]</td>";
+        $itemName = get_item($connection);
 
-        $string = get_values_child($connection, $row[0]);
-        echo "<td>$string</td>
+        echo "<td>";
+        foreach($itemName as $value){
+            $string = $value;
+            $string = $string . " " . get_values_child($connection, $row[0], $value);
+            echo $string;
+        }
+        echo "</td>
         </tr>";
     }
 
@@ -102,58 +108,57 @@ function get_all_rows($connection, $table, $orderColumn){
     return $result;
 }
 
-/*
-talvez para executar o pretendido seja necessário ir buscar num primeiro query
-os tipos (Austismo...), e ir buscar linha os subitens e valores de cada um
-*/
-
-//função que busca todos os valores das crianças
-function get_values_child($connection, $child_wanted){
-    //variáveis a serem usadas nas queries
-    $collums = array("value.value", "subitem.name", "item.name");
-    $tables = array("child, value, item, subitem");
-    $conditions = array("$child_wanted = value.child_id", "value.subitem_id = subitem.id", "subitem.item_id = item.id");
+//função para obter todos os itens
+//vai ser necessário alterar esta função para obter apenas os itens que a criança precisa
+function get_item($connection){
+    //variáveis a serem usadas nas querys
+    $collum = "item.name";
+    $table = "item";
     $order = "item.name";
 
     //criação da query
-    $query = "Select ". implode(",", $collums) . " ";
+    $query = "Select " . $collum . " ";
+    $query = $query . "From " . $table . " ";
+    $query = $query . "Order by " . $order;
+
+    //execução da query
+    $result = mysqli_query($connection, $query);
+
+    $contador = 0;
+    while ($row = mysqli_fetch_array($result, MYSQLI_NUM)){
+        $itemName[$contador] = $row[0];
+        $contador = $contador + 1;
+    }
+
+    return $itemName;
+}
+
+//função que busca todos os valores das crianças
+function get_values_child($connection, $child_wanted, $item_wanted){
+    //variáveis a serem usadas nas queries
+    $collums = array("value.value", "subitem.name");
+    $tables = array("child, value, item, subitem");
+    $conditions = array("$child_wanted = value.child_id", "value.subitem_id = subitem.id", 
+    "subitem.item_id = item.id", "item.name Like");
+    $order = "item.name";
+
+    //criação da query
+    $query = "Select Distinct ". implode(",", $collums) . " ";
     $query = $query . "From ". implode(",", $tables) . " ";
     $query = $query . "where " . implode(" and ", $conditions) . " ";
+    $query = $query . '"' . $item_wanted . '" '; 
     $query = $query . "Order by $order";
-    
     
     //execução da query
     $result = mysqli_query($connection, $query);
     
-    $hasBegun = FALSE;
-    $hasbegun2 = FALSE;
     $string = "";
     while ($row = mysqli_fetch_array($result, MYSQLI_NUM)){
-        if(!$hasbegun2) {
-            if(!$hasBegun){
-                $stringItemName = $row[2];
-                $string = $string . $stringItemName . ": ";
-                $string = $string . $row[1] . " ";
-                $string = $string . "(" . $row[0] . ");";
-            } else if ($stringItemName != $row[2]) {
-                $stringItemName = $row[2];
-                $string = $string . $stringItemName . ": ";
-                $string = $string . $row[1] . " ";
-                $string = $string . "(" . $row[0] . ");";
-            } else if ($stringItemName == $row[2]) {
-                $string = $string . $row[1] . " ";
-                $string = $string . "(" . $row[0] . ") ";
-            }
-            $hasBegun = TRUE;
-            $hasbegun2 = TRUE;
-            $test = $row[1];
-        } else if ($test == $row[1]) {
-            //Do nothing
-        } else {
-            $hasbegun2 = FALSE;
-        }
+            $string = $string . $row[1] . " ";
+            $string = $string . "(" . $row[0] . "); ";
     }
     
+    print $string;
     return $string;
 }
 
