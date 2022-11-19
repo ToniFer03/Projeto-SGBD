@@ -82,13 +82,16 @@ function create_table($connection, $collums, $table, $orderColumn){
         <td>$row[3]</td>
         <td>$row[4]</td>
         <td>$row[5]</td>";
-        $itemName = get_item($connection);
+        $itemName = get_item($connection, $row[0]);
 
         echo "<td>";
-        foreach($itemName as $value){
-            $string = $value;
+        if($itemName[0] != 0){
+            foreach($itemName as $value){
+            $string = $value . ":";
             $string = $string . " " . get_values_child($connection, $row[0], $value);
-            echo $string;
+            $string = ucfirst($string);
+            echo "$string <br/>";
+            }
         }
         echo "</td>
         </tr>";
@@ -109,20 +112,24 @@ function get_all_rows($connection, $table, $orderColumn){
 }
 
 //função para obter todos os itens
-//vai ser necessário alterar esta função para obter apenas os itens que a criança precisa
-function get_item($connection){
+function get_item($connection, $child_wanted){
     //variáveis a serem usadas nas querys
     $collum = "item.name";
-    $table = "item";
+    $tables = array("child, value, item, subitem");
+    $conditions = array("$child_wanted = value.child_id", "value.subitem_id = subitem.id", 
+    "subitem.item_id = item.id");
     $order = "item.name";
 
     //criação da query
-    $query = "Select " . $collum . " ";
-    $query = $query . "From " . $table . " ";
+    $query = "Select Distinct " . $collum . " ";
+    $query = $query . "From ". implode(",", $tables) . " ";
+    $query = $query . "where " . implode(" and ", $conditions) . " ";
     $query = $query . "Order by " . $order;
 
     //execução da query
     $result = mysqli_query($connection, $query);
+
+    $itemName[0] = 0;
 
     $contador = 0;
     while ($row = mysqli_fetch_array($result, MYSQLI_NUM)){
@@ -158,7 +165,6 @@ function get_values_child($connection, $child_wanted, $item_wanted){
             $string = $string . "(" . $row[0] . "); ";
     }
     
-    print $string;
     return $string;
 }
 
