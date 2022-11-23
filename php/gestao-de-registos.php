@@ -32,7 +32,14 @@ if (is_user_logged_in()){ //checks if the user is logged in
             //ordenado por ordem alfabetica
             //após a tabela
             echo "<h3> Dados de registo - introdução </h3>";
-            echo "<p> Introduza os dados pessoais básicos da criança: ";
+            echo "<p> Introduza os dados pessoais básicos da criança: </p>";
+            formulario_site();
+        } else {
+            if($_POST["estado"] == "validar"){
+                //codigo de validar
+            } else {
+                //other code
+            }
         }
     } else {
         print "Não têm autorização para aceder a esta página!";
@@ -166,6 +173,31 @@ function get_values_child($connection, $child_wanted, $item_wanted){
     }
     
     return $string;
+}
+
+function formulario_site(){
+    echo "<form action'#' method='POST'>";
+    //Nome da Criança
+    echo "Nome Completo: <input type='text' maxlength='128' pattern='[a-zA-Z\u00C0-\u00ff ]+' name='child_name' required>";
+
+    //Data de nascimento
+    echo "Data de Nascimento: <input type='text' patter='[0-9]{4}-(0[1-9]|1[012])-(0[1-9]|1[0-9]|2[0-9]|3[01])' name='data_nascimento' required>";
+
+    //nome encarregado de educação
+    echo "Nome Enc. Educação: <input type='text' maxlength='128' pattern='[a-zA-Z\u00C0-\u00ff ]+' name='nome_encedu' required>";
+
+    //telefone encarregado de educação
+    echo "Telefone Enc. Edu: <input type='text' pattern='[0-9]{9}' name='num_telefone' required>";
+
+    //email encarregado de educação
+    echo "Email do tutor: <input type='text' pattern='[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$' name='email_tutor'>";
+
+    echo "<input type='hidden' name='estado' value='validar'>";
+    echo "<input type='submit' name='submit' value='submit'>";
+}
+
+function formulario_processamento(){
+    //processamento formulario
 }
 
 ?>
