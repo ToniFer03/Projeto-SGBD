@@ -8,6 +8,13 @@ $username = 'root';
 $password = 'sgbdc4';
 $databaseName = 'bitnami_wordpress';
 $errorMessage = "An error has occured";
+$indicesFormulario = [];
+$indicesFormulario[0] = "child_name";
+$indicesFormulario[1] = "data_nascimento";
+$indicesFormulario[2] = "nome_encedu";
+$indicesFormulario[3] = "num_telefone";
+$indicesFormulario[4] = "email_tutor";
+$valoresValidados = [];
 
 //conectar a base de dados
 $link = mysqli_connect($databaseip, $username, $password) or die($errorMessage);
@@ -28,15 +35,14 @@ if (is_user_logged_in()){ //checks if the user is logged in
             $orderColumn = "name";
                 create_table($link, $collums, $table, $orderColumn);
             }
-            //caso existam mostrar uma tabela com todas as crianças
-            //ordenado por ordem alfabetica
-            //após a tabela
+            //apos a tabela
             echo "<h3> Dados de registo - introdução </h3>";
             echo "<p> Introduza os dados pessoais básicos da criança: </p>";
-            formulario_site();
+            formulario_site($indicesFormulario);
         } else {
             if($_POST["estado"] == "validar"){
-                //codigo de validar
+                echo "<h3> Dados de registo - validação </h3>";
+                $valoresValidados = validar_formulario($indicesFormulario);
             } else {
                 //other code
             }
@@ -175,29 +181,66 @@ function get_values_child($connection, $child_wanted, $item_wanted){
     return $string;
 }
 
-function formulario_site(){
+function formulario_site($indicesFormulario){
     echo "<form action'#' method='POST'>";
     //Nome da Criança
-    echo "Nome Completo: <input type='text' maxlength='128' pattern='[a-zA-Z\u00C0-\u00ff ]+' name='child_name' required>";
+    echo "Nome Completo: <input type='text' maxlength='128' pattern='[a-zA-Z\u00C0-\u00ff ]+' name='$indicesFormulario[0]' required>";
 
     //Data de nascimento
-    echo "Data de Nascimento: <input type='text' patter='[0-9]{4}-(0[1-9]|1[012])-(0[1-9]|1[0-9]|2[0-9]|3[01])' name='data_nascimento' required>";
+    echo "Data de Nascimento: <input type='text' patter='[0-9]{4}-(0[1-9]|1[012])-(0[1-9]|1[0-9]|2[0-9]|3[01])' name='$indicesFormulario[1]' required>";
 
     //nome encarregado de educação
-    echo "Nome Enc. Educação: <input type='text' maxlength='128' pattern='[a-zA-Z\u00C0-\u00ff ]+' name='nome_encedu' required>";
+    echo "Nome Enc. Educação: <input type='text' maxlength='128' pattern='[a-zA-Z\u00C0-\u00ff ]+' name='$indicesFormulario[2]' required>";
 
     //telefone encarregado de educação
-    echo "Telefone Enc. Edu: <input type='text' pattern='[0-9]{9}' name='num_telefone' required>";
+    echo "Telefone Enc. Edu: <input type='text' pattern='[0-9]{9}' name='$indicesFormulario[3]' required>";
 
     //email encarregado de educação
-    echo "Email do tutor: <input type='text' pattern='[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$' name='email_tutor'>";
+    echo "Email do tutor: <input type='text' pattern='[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$' name='$indicesFormulario[4]'>";
 
     echo "<input type='hidden' name='estado' value='validar'>";
     echo "<input type='submit' name='submit' value='submit'>";
 }
 
-function formulario_processamento(){
-    //processamento formulario
+function testar_input($data){
+    $data = trim($data);
+    $data = stripslashes($data);
+    $data = htmlspecialchars($data);
+    return $data;
+}
+
+function validar_formulario($indicesFormulario){
+    $valorFormulario = [];
+
+    if(empty($_POST[$indicesFormulario[0]])) {
+        $nameErr = "Nome é obrigatório!";
+    } else {
+        $valorFormulario[$indicesFormulario[0]] = testar_input($_POST[$indicesFormulario[0]]);
+    }
+
+    if(empty($_POST[$indicesFormulario[1]])) {
+            $data_nasc_Err = "Data de nascimento é obrigatória!";
+        } else {
+            $valorFormulario[$indicesFormulario[1]] = testar_input($_POST[$indicesFormulario[1]]);
+    }
+
+    if(empty($_POST[$indicesFormulario[2]])) {
+        $nome_encedu_Err = "Nome do Encarregado de Educação é obrigatório!";
+    } else {
+        $valorFormulario[$indicesFormulario[2]] = testar_input($_POST[$indicesFormulario[2]]);
+    }
+
+    if(empty($_POST[$indicesFormulario[3]])) {
+        $telErr = "Numéro de telefone do Encarregado de educação é obrigatório!";
+    } else {
+        $num_telefone[$indicesFormulario[3]] = testar_input($_POST[$indicesFormulario[3]]);
+    }
+
+    if(empty($_POST[$indicesFormulario[4]])) {
+        $emailErr = "Email do Encarregado do Educação é obrigatório!";
+    } else {
+        $email_tutor[$indicesFormulario[4]] = testar_input($_POST[$indicesFormulario[4]]);
+    }
 }
 
 ?>
