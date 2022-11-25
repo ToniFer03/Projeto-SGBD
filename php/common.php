@@ -2,10 +2,11 @@
 
 //declaração de variaveis
 $clientsideval = 0;
+global $current_page;
+$current_page = get_site_url() . '/' . basename(get_permalink());
 
 function voltarAtras(){ //função para voltar atrás
-    echo "<script type='text/javascript'>document.write(\"<a href='javascript:history.back()' 
-    class='backLink' title='Voltar atr&aacute;s'>Voltar atr&aacute;s</a>\");</script>
+    echo "<script type='text/javascript'>document.write(\"<a href='javascript:history.back()' class='backLink' title='Voltar atr&aacute;s'>Voltar atr&aacute;s</a>\");</script>
     <noscript>
     <a href='".$_SERVER['HTTP_REFERER']."‘ class='backLink' title='Voltar atr&aacute;s'>Voltar atr&aacute;s</a>
     </noscript>";

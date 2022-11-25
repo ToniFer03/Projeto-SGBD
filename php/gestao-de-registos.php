@@ -44,11 +44,24 @@ if (is_user_logged_in()){ //checks if the user is logged in
             if($_POST["estado"] == "validar"){
                 echo "<h3> Dados de registo - validação </h3>";
                 validar_formulario($indicesFormulario, $valoresValidados, $errosFormulario);
-                echo $errosFormulario[$indicesFormulario[0]];
-                echo $errosFormulario[$indicesFormulario[1]];
-                echo $errosFormulario[$indicesFormulario[2]];
-                echo $errosFormulario[$indicesFormulario[3]];
-                echo $errosFormulario[$indicesFormulario[4]];
+                
+                //caso exista algum erro no formulario mostrá-lo
+                if(!empty($errosFormulario)){
+                   apresentar_erros($errosFormulario);
+                   
+                   //botão voltar atrás
+                   voltarAtras();
+                } else {
+                    echo "<p>";
+                    echo "Estamos prestes a inserir os dados abaixo na base de dados. Confirma que os dados estão corretos e pretende submeter os mesmos? <br>";
+                    echo "Nome: " . $valoresValidados[$indicesFormulario[0]] . "<br>";
+                    echo "Data de Nascimento: " . $valoresValidados[$indicesFormulario[1]] . "<br>";
+                    echo "Nome Encarregado de Educação: " . $valoresValidados[$indicesFormulario[2]] . "<br>";
+                    echo "Número de Telefone: " . $valoresValidados[$indicesFormulario[3]] . "<br>";
+                    echo "Email: " . $valoresValidados[$indicesFormulario[4]];
+                    echo "</p>";
+                }
+
             } else {
                 //other code
             }
@@ -219,37 +232,37 @@ function validar_formulario($indicesFormulario, &$valoresValidados, &$errosFormu
 
     //validação do nome
     if(empty($_POST[$indicesFormulario[0]])) {
-        $errosFormulario[$indicesFormulario[0]] = "Nome é obrigatório!";
+        $errosFormulario[$indicesFormulario[0]] = "Nome é obrigatório! Por favor preencha o nome da criança.";
     } else {
             $valoresValidados[$indicesFormulario[0]] = testar_input($_POST[$indicesFormulario[0]]);
 
             //fazer check do nome
             if (!preg_match("/[a-zA-Z\x{00C0}-\x{00ff} ]+/u", $valoresValidados[$indicesFormulario[0]])) {
-                $errosFormulario[$indicesFormulario[0]] = "Inseriu caracteres inválidos!";
+                $errosFormulario[$indicesFormulario[0]] = "Inseriu caracteres inválidos no nome da criança! Por favor corrija.";
              }
     }
 
     //validação da data de nascimento
     if(empty($_POST[$indicesFormulario[1]])) {
-            $errosFormulario[$indicesFormulario[1]] = "Data de nascimento é obrigatória!";
+            $errosFormulario[$indicesFormulario[1]] = "Data de nascimento é obrigatória! Por favor preencha a data de nascimento da criança.";
         } else {
             $valoresValidados[$indicesFormulario[1]] = testar_input($_POST[$indicesFormulario[1]]);
 
             //fazer check do email
             if (!preg_match("/^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$/", $valoresValidados[$indicesFormulario[1]])) {
-                $errosFormulario[$indicesFormulario[1]] = "Data de nascimento em formato inválido!";
+                $errosFormulario[$indicesFormulario[1]] = "Data de nascimento em formato inválido! Formato requisita é AAAA-MM-DD";
             }
     }
 
     //validação do nome do encarregado de educação
     if(empty($_POST[$indicesFormulario[2]])) {
-        $errosFormulario[$indicesFormulario[2]] = "Nome do Encarregado de Educação é obrigatório!";
+        $errosFormulario[$indicesFormulario[2]] = "Nome do Encarregado de Educação é obrigatório! Por favor insira o nome do Encarregado de Educação.";
     } else {
         $valoresValidados[$indicesFormulario[2]] = testar_input($_POST[$indicesFormulario[2]]);
 
         //fazer o check do nome do encarregado de educação
         if (!preg_match("/[a-zA-Z\x{00C0}-\x{00ff} ]+/u", $valoresValidados[$indicesFormulario[2]])) {
-            $errosFormulario[$indicesFormulario[2]] = "Inseriu caracteres inválidos!";
+            $errosFormulario[$indicesFormulario[2]] = "Inseriu caracteres inválidos no Nome do Encarregado de Educação! Por favor corrija.";
         }
     }
 
@@ -260,7 +273,7 @@ function validar_formulario($indicesFormulario, &$valoresValidados, &$errosFormu
 
         //fazer o check para o número de telefone
         if (!preg_match("/^\d{9}$/", $valoresValidados     [$indicesFormulario[3]])) {
-            $errosFormulario[$indicesFormulario[3]] = "Inseriu um número de telemovel com formato inválido!";
+            $errosFormulario[$indicesFormulario[3]] = "Inseriu um número de telemovel com formato inválido! Necessários 9 digitos.";
         }
     }
     
@@ -269,9 +282,17 @@ function validar_formulario($indicesFormulario, &$valoresValidados, &$errosFormu
     //validar o email
     if(!filter_var($valoresValidados[$indicesFormulario[4]], FILTER_VALIDATE_EMAIL)){
         if(!$valoresValidados[$indicesFormulario[4]] == "")
-            $errosFormulario[$indicesFormulario[4]] = "Inseriu um email inválido!";
+            $errosFormulario[$indicesFormulario[4]] = "Inseriu um email inválido! Por favor corrija.";
     }
 
+}
+
+function apresentar_erros($errosFormulario){
+    echo "<p>";
+    foreach($errosFormulario as $valor){
+        echo $valor . "<br>";
+    }
+    echo "</p>";
 }
 
 ?>
