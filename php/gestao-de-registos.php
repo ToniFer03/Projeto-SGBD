@@ -17,6 +17,7 @@ $indicesFormulario[4] = "email_tutor";
 $valoresValidados = [];
 $errosFormulario = [];
 
+
 //conectar a base de dados
 $link = mysqli_connect($databaseip, $username, $password) or die($errorMessage);
 mysqli_select_db($link, $databaseName);
@@ -59,7 +60,8 @@ if (is_user_logged_in()){ //checks if the user is logged in
 
             } else {
                 if($_POST["estado"] == "inserir"){
-                    //codigo a realizar
+                    echo "<h3> Dados de registo - inserção </h3>";
+                    inserir_dados("child", $indicesFormulario, $link);
                 }
             }
         }
@@ -314,5 +316,49 @@ function apresentar_validacao($valoresValidados, $indicesFormulario){
     echo "<input type='hidden' name='$indicesFormulario[4]' value='$valoresValidados[4]'>";
     echo "<input type='hidden' name='estado' value='inserir'>";
     echo "<input type='submit' name='submit' value='submit'>";
+}
+
+function inserir_dados($table, $indicesFormulario, $connection){
+    //criação da query
+    $query = "Insert into $table ";
+    $query = $query . " Values (";
+    $query = $query . get_highest_id($table, $connection) + 1;
+    $query = $query . ", " . "'". $_POST[$indicesFormulario[0]] .  "' ";
+    $query = $query . ", " . "'". $_POST[$indicesFormulario[1]] .  "' ";
+    $query = $query . ", " . "'". $_POST[$indicesFormulario[2]] .  "' ";
+    $query = $query . ", " . $_POST[$indicesFormulario[3]] .  " ";
+    $query = $query . ", " . "'". $_POST[$indicesFormulario[4]] .  "' ";
+    $query = $query . " )";
+
+    //execução da query
+    $result = mysqli_query($connection, $query);
+
+    //verificar inserção
+    $query = "Select id from $table ";
+    $query = $query . "where id = " . get_highest_id($table, $connection);
+
+    $result = mysqli_query($connection, $query) or die( mysql_error());
+
+    if(mysqli_num_rows($result) <= 0 ){
+        echo 'Ocorreu um erro ao inserir os dados na Base de Dados :(';
+    } else {
+        echo 'Dados inseridos com sucesso!';
+    }
+
+    $temp = $GLOBALS['current_page'];
+    echo "<a href=$temp> Voltar a página inicial </a>";
+}
+
+function get_highest_id($table, $connection){
+    //criação da query
+    $query = "Select MAX(ID) ";
+    $query = $query . "From $table";
+
+    //execução da query
+    $result = mysqli_query($connection, $query);
+
+    //processamento
+    $row = mysqli_fetch_array($result, MYSQLI_NUM);
+    return $row[0];
 }
 ?>
