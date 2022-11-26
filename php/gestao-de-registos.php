@@ -4,6 +4,7 @@ require_once "custom/php/common.php";
 //declaração de variáveis 
 $capability = 'manage_records';
 $indicesFormulario = array("child_name", "data_nascimento", "nome_encedu", "num_telefone", "email_tutor");
+$collums_insert = array("name, birth_date, tutor_name, tutor_phone, tutor_email");
 $valoresValidados = [];
 $errosFormulario = [];
 
@@ -45,7 +46,7 @@ if (is_user_logged_in()){ //checks if the user is logged in
                     break;
                 case 'inserir':
                     echo "<h3> Dados de registo - inserção </h3>";
-                    inserir_dados("child", $indicesFormulario);
+                    inserir_dados("child", $indicesFormulario, $collums_insert);
                     break;
                 default:
                     echo $errorMessage;
@@ -324,12 +325,14 @@ function apresentar_validacao($valoresValidados, $indicesFormulario){
     echo "<input type='submit' name='submit' value='submit'>";
 }
 
-function inserir_dados($table, $indicesFormulario){
+function inserir_dados($table, $indicesFormulario, $collums_insert){
     //criação da query
     $query = "Insert into $table ";
+
+    $query = $query . "(" . implode(" , ", $collums_insert) . ") ";
+
     $query = $query . " Values (";
-    $query = $query . get_highest_id($table) + 1;
-    $query = $query . ", " . "'". $_POST[$indicesFormulario[0]] .  "' ";
+    $query = $query . "'". $_POST[$indicesFormulario[0]] .  "' ";
     $query = $query . ", " . "'". $_POST[$indicesFormulario[1]] .  "' ";
     $query = $query . ", " . "'". $_POST[$indicesFormulario[2]] .  "' ";
     $query = $query . ", " . $_POST[$indicesFormulario[3]] .  " ";
@@ -341,20 +344,6 @@ function inserir_dados($table, $indicesFormulario){
 
     if(!$result) {
         die ("O query falhou: " . mysqli_error($GLOBALS['link']));
-    }
-
-
-    //verificar inserção
-    $query = "Select id from $table ";
-    $query = $query . "where id = " . get_highest_id($table);
-
-    $result = mysqli_query($GLOBALS['link'], $query) or die( mysql_error());
-    if(!$result) {
-        die ("O query falhou: " . mysqli_error($GLOBALS['link']));
-    }
-
-    if(mysqli_num_rows($result) <= 0 ){
-        echo "Ocorreu um erro ao inserir os dados na Base de Dados :(";
     } else {
         echo "Dados inseridos com sucesso!";
     }
@@ -362,23 +351,5 @@ function inserir_dados($table, $indicesFormulario){
     $temp = $GLOBALS['current_page'];
     echo "<p> ";
     echo "<a href=$temp> Voltar a página inicial </a> </p>";
-}
-
-function get_highest_id($table){
-    //criação da query
-    $query = "Select MAX(ID) ";
-    $query = $query . "From $table";
-
-    //execução da query
-    $result = mysqli_query($GLOBALS['link'], $query);
-
-    if(!$result) {
-        die ("O query falhou: " . mysqli_error($GLOBALS['link']));
-    }
-
-
-    //processamento
-    $row = mysqli_fetch_array($result, MYSQLI_NUM);
-    return $row[0];
 }
 ?>
