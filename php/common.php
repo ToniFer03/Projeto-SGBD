@@ -2,8 +2,13 @@
 
 //declaração de variaveis
 $clientsideval = 0;
+$errorMessage = "An error has occured";
+
 global $current_page;
 $current_page = get_site_url() . '/' . basename(get_permalink());
+
+global $link;
+$link = mysqli_connect(DB_HOST,DB_USER,DB_PASSWORD,DB_NAME) or die($errorMessage);
 
 function voltarAtras(){ //função para voltar atrás
     echo "<script type='text/javascript'>document.write(\"<a href='javascript:history.back()' class='backLink' title='Voltar atr&aacute;s'>Voltar atr&aacute;s</a>\");</script>

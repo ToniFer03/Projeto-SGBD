@@ -3,31 +3,15 @@ require_once "custom/php/common.php";
 
 //declaração de variáveis 
 $capability = 'manage_records';
-$databaseip = 'localhost';
-$username = 'root';                         
-$password = 'sgbdc4';
-$databaseName = 'bitnami_wordpress';
-$errorMessage = "An error has occured";
-$indicesFormulario = [];
-$indicesFormulario[0] = "child_name";
-$indicesFormulario[1] = "data_nascimento";
-$indicesFormulario[2] = "nome_encedu";
-$indicesFormulario[3] = "num_telefone";
-$indicesFormulario[4] = "email_tutor";
+$indicesFormulario = array("child_name", "data_nascimento", "nome_encedu", "num_telefone", "email_tutor");
 $valoresValidados = [];
 $errosFormulario = [];
-
-
-//conectar a base de dados
-$link = mysqli_connect($databaseip, $username, $password) or die($errorMessage);
-mysqli_select_db($link, $databaseName);
-
 
 if (is_user_logged_in()){ //checks if the user is logged in
     if (current_user_can( $capability )){ //checks if the user has a specific capability
         if (empty($_POST)) { //checks if post is empty
             $table = "child";
-            $num_child = count_rows($link, $table);
+            $num_child = count_rows($table);
 
             if($num_child == 0){
                 print("Não há crianças!");
@@ -35,41 +19,45 @@ if (is_user_logged_in()){ //checks if the user is logged in
                 $collums = array("Nome", "Data de nascimento", "Enc. de educação",
             "Telefone do Enc.", "e-mail", "registos");
             $orderColumn = "name";
-                create_table($link, $collums, $table, $orderColumn);
+                create_table($collums, $table, $orderColumn);
             }
             //apos a tabela
             echo "<h3> Dados de registo - introdução </h3>";
             echo "<p> Introduza os dados pessoais básicos da criança: </p>";
             formulario_site($indicesFormulario);
         } else {
-            if($_POST["estado"] == "validar"){
-                echo "<h3> Dados de registo - validação </h3>";
-                validar_formulario($indicesFormulario, $valoresValidados, $errosFormulario);
-                
-                //caso exista algum erro no formulario mostrá-lo
-                if(!empty($errosFormulario)){
-                   apresentar_erros($errosFormulario);
-                   
-                   //botão voltar atrás
-                   voltarAtras();
-                } else {
-                    echo "<p>";
-                    echo "Estamos prestes a inserir os dados abaixo na base de dados. Confirma que os dados estão corretos e pretende submeter os mesmos? <br>";
-                    apresentar_validacao($valoresValidados, $indicesFormulario);
-                }
-
-            } else {
-                if($_POST["estado"] == "inserir"){
+            switch ($_POST["estado"]) {
+                case 'validar':
+                    echo "<h3> Dados de registo - validação </h3>";
+                    validar_formulario($indicesFormulario, $valoresValidados, $errosFormulario);
+                    
+                    //caso exista algum erro no formulario mostrá-lo
+                    if(!empty($errosFormulario)){
+                    apresentar_erros($errosFormulario);
+                    
+                    //botão voltar atrás
+                    voltarAtras();
+                    } else {
+                        echo "<p>";
+                        echo "Estamos prestes a inserir os dados abaixo na base de dados. Confirma que os dados estão corretos e pretende submeter os mesmos? <br>";
+                        apresentar_validacao($valoresValidados, $indicesFormulario);
+                    }
+                    break;
+                case 'inserir':
                     echo "<h3> Dados de registo - inserção </h3>";
-                    inserir_dados("child", $indicesFormulario, $link);
-                }
+                    inserir_dados("child", $indicesFormulario);
+                    break;
+                default:
+                    echo $errorMessage;
+                    voltarAtras();
+                    break;
             }
         }
     } else {
         print "Não têm autorização para aceder a esta página!";
+        voltarAtras();
     }
 } else {
-    //Just a debbugin line
     print "user is not logged in";
 }
 
@@ -81,12 +69,17 @@ ter uma variável para a query
 ter uma variável result que obtem o resultado da query
 e ter uma variável row que busque cada linha do resultado acima
 */
-function count_rows($connection, $table){
+function count_rows($table){
     //criação da query
-    $query = "select count(1) from $table"; 
+    $query = "Select count(1) from $table"; 
 
     //execução da query
-    $result = mysqli_query($connection, $query);
+    $result = mysqli_query($GLOBALS['link'], $query);
+
+    if(!$result) {
+        die ("O query falhou: " . mysqli_error($GLOBALS['link']));
+    }
+
 
     //processamento do resultado da query
     $row = mysqli_fetch_array($result, MYSQLI_NUM);
@@ -94,7 +87,7 @@ function count_rows($connection, $table){
 }
 
 //função para a criação da tabela
-function create_table($connection, $collums, $table, $orderColumn){
+function create_table($collums, $table, $orderColumn){
     echo "<table>";
     
     //cria os titulos das colunas
@@ -105,7 +98,7 @@ function create_table($connection, $collums, $table, $orderColumn){
     echo "</tr>";
 
     //criar todas as linhas da tabela com todos os valores
-    $result = get_all_rows($connection, $table, $orderColumn);
+    $result = get_all_rows($table, $orderColumn);
     while ($row = mysqli_fetch_array($result, MYSQLI_NUM)){
         echo "<tr> 
         <td>$row[1]</td>
@@ -113,13 +106,13 @@ function create_table($connection, $collums, $table, $orderColumn){
         <td>$row[3]</td>
         <td>$row[4]</td>
         <td>$row[5]</td>";
-        $itemName = get_item($connection, $row[0]);
+        $itemName = get_item($row[0]);
 
         echo "<td>";
         if($itemName[0] != 0){
             foreach($itemName as $value){
             $string = $value . ":";
-            $string = $string . " " . get_values_child($connection, $row[0], $value);
+            $string = $string . " " . get_values_child($row[0], $value);
             $string = ucfirst($string);
             echo "$string <br/>";
             }
@@ -132,18 +125,23 @@ function create_table($connection, $collums, $table, $orderColumn){
 }
 
 //função que recebe todas as linhas de uma tabela, ordenada
-function get_all_rows($connection, $table, $orderColumn){
+function get_all_rows($table, $orderColumn){
     //criação da query
     $query = "Select * from $table ";
     $query = $query . "Order By $orderColumn";
 
     //execução da query
-    $result = mysqli_query($connection, $query);
+    $result = mysqli_query($GLOBALS['link'], $query);
+
+    if(!$result) {
+        die ("O query falhou: " . mysqli_error($GLOBALS['link']));
+    }
+
     return $result;
 }
 
 //função para obter todos os itens
-function get_item($connection, $child_wanted){
+function get_item($child_wanted){
     //variáveis a serem usadas nas querys
     $collum = "item.name";
     $tables = array("child, value, item, subitem");
@@ -158,7 +156,11 @@ function get_item($connection, $child_wanted){
     $query = $query . "Order by " . $order;
 
     //execução da query
-    $result = mysqli_query($connection, $query);
+    $result = mysqli_query($GLOBALS['link'], $query);
+
+    if(!$result) {
+        die ("O query falhou: " . mysqli_error($GLOBALS['link']));
+    }
 
     $itemName[0] = 0;
 
@@ -172,7 +174,7 @@ function get_item($connection, $child_wanted){
 }
 
 //função que busca todos os valores das crianças
-function get_values_child($connection, $child_wanted, $item_wanted){
+function get_values_child($child_wanted, $item_wanted){
     //variáveis a serem usadas nas queries
     $collums = array("value.value", "subitem.name");
     $tables = array("child, value, item, subitem");
@@ -188,12 +190,16 @@ function get_values_child($connection, $child_wanted, $item_wanted){
     $query = $query . "Order by $order";
     
     //execução da query
-    $result = mysqli_query($connection, $query);
+    $result = mysqli_query($GLOBALS['link'], $query);
+
+    if(!$result) {
+        die ("O query falhou: " . mysqli_error($GLOBALS['link']));
+    }
     
     $string = "";
     while ($row = mysqli_fetch_array($result, MYSQLI_NUM)){
-            $string = $string . $row[1] . " ";
-            $string = $string . "(" . $row[0] . "); ";
+        $string = $string . $row[1] . " ";
+        $string = $string . "(" . $row[0] . "); ";
     }
     
     return $string;
@@ -318,11 +324,11 @@ function apresentar_validacao($valoresValidados, $indicesFormulario){
     echo "<input type='submit' name='submit' value='submit'>";
 }
 
-function inserir_dados($table, $indicesFormulario, $connection){
+function inserir_dados($table, $indicesFormulario){
     //criação da query
     $query = "Insert into $table ";
     $query = $query . " Values (";
-    $query = $query . get_highest_id($table, $connection) + 1;
+    $query = $query . get_highest_id($table) + 1;
     $query = $query . ", " . "'". $_POST[$indicesFormulario[0]] .  "' ";
     $query = $query . ", " . "'". $_POST[$indicesFormulario[1]] .  "' ";
     $query = $query . ", " . "'". $_POST[$indicesFormulario[2]] .  "' ";
@@ -331,31 +337,45 @@ function inserir_dados($table, $indicesFormulario, $connection){
     $query = $query . " )";
 
     //execução da query
-    $result = mysqli_query($connection, $query);
+    $result = mysqli_query($GLOBALS['link'], $query);
+
+    if(!$result) {
+        die ("O query falhou: " . mysqli_error($GLOBALS['link']));
+    }
+
 
     //verificar inserção
     $query = "Select id from $table ";
-    $query = $query . "where id = " . get_highest_id($table, $connection);
+    $query = $query . "where id = " . get_highest_id($table);
 
-    $result = mysqli_query($connection, $query) or die( mysql_error());
+    $result = mysqli_query($GLOBALS['link'], $query) or die( mysql_error());
+    if(!$result) {
+        die ("O query falhou: " . mysqli_error($GLOBALS['link']));
+    }
 
     if(mysqli_num_rows($result) <= 0 ){
-        echo 'Ocorreu um erro ao inserir os dados na Base de Dados :(';
+        echo "Ocorreu um erro ao inserir os dados na Base de Dados :(";
     } else {
-        echo 'Dados inseridos com sucesso!';
+        echo "Dados inseridos com sucesso!";
     }
 
     $temp = $GLOBALS['current_page'];
-    echo "<a href=$temp> Voltar a página inicial </a>";
+    echo "<p> ";
+    echo "<a href=$temp> Voltar a página inicial </a> </p>";
 }
 
-function get_highest_id($table, $connection){
+function get_highest_id($table){
     //criação da query
     $query = "Select MAX(ID) ";
     $query = $query . "From $table";
 
     //execução da query
-    $result = mysqli_query($connection, $query);
+    $result = mysqli_query($GLOBALS['link'], $query);
+
+    if(!$result) {
+        die ("O query falhou: " . mysqli_error($GLOBALS['link']));
+    }
+
 
     //processamento
     $row = mysqli_fetch_array($result, MYSQLI_NUM);
