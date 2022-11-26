@@ -54,16 +54,13 @@ if (is_user_logged_in()){ //checks if the user is logged in
                 } else {
                     echo "<p>";
                     echo "Estamos prestes a inserir os dados abaixo na base de dados. Confirma que os dados estão corretos e pretende submeter os mesmos? <br>";
-                    echo "Nome: " . $valoresValidados[$indicesFormulario[0]] . "<br>";
-                    echo "Data de Nascimento: " . $valoresValidados[$indicesFormulario[1]] . "<br>";
-                    echo "Nome Encarregado de Educação: " . $valoresValidados[$indicesFormulario[2]] . "<br>";
-                    echo "Número de Telefone: " . $valoresValidados[$indicesFormulario[3]] . "<br>";
-                    echo "Email: " . $valoresValidados[$indicesFormulario[4]];
-                    echo "</p>";
+                    apresentar_validacao($valoresValidados, $indicesFormulario);
                 }
 
             } else {
-                //other code
+                if($_POST["estado"] == "inserir"){
+                    //codigo a realizar
+                }
             }
         }
     } else {
@@ -230,7 +227,6 @@ function testar_input($data){
 
 function validar_formulario($indicesFormulario, &$valoresValidados, &$errosFormulario){
 
-    //validação do nome
     if(empty($_POST[$indicesFormulario[0]])) {
         $errosFormulario[$indicesFormulario[0]] = "Nome é obrigatório! Por favor preencha o nome da criança.";
     } else {
@@ -295,4 +291,28 @@ function apresentar_erros($errosFormulario){
     echo "</p>";
 }
 
+function apresentar_validacao($valoresValidados, $indicesFormulario){
+    echo "Nome: " . $valoresValidados[$indicesFormulario[0]] . "<br>";
+    echo "Data de Nascimento: " . $valoresValidados[$indicesFormulario[1]] . "<br>";
+    echo "Nome Encarregado de Educação: " . $valoresValidados[$indicesFormulario[2]] . "<br>";
+    echo "Número de Telefone: " . $valoresValidados[$indicesFormulario[3]] . "<br>";
+    echo "Email: " . $valoresValidados[$indicesFormulario[4]]  . "<br>";
+    echo "</p>";
+
+    $i = 0;
+    foreach($valoresValidados as $valor){
+        $valoresValidados[$i] = $valoresValidados[$indicesFormulario[$i]];
+        $i = $i + 1;
+    }
+    
+
+    echo "<form action'#' method='POST'>";
+    echo "<input type='hidden' name='$indicesFormulario[0]' value='$valoresValidados[0]'>";
+    echo "<input type='hidden' name='$indicesFormulario[1]' value='$valoresValidados[1]'>";
+    echo "<input type='hidden' name='$indicesFormulario[2]' value='$valoresValidados[2]'>";
+    echo "<input type='hidden' name='$indicesFormulario[3]' value='$valoresValidados[3]'>";
+    echo "<input type='hidden' name='$indicesFormulario[4]' value='$valoresValidados[4]'>";
+    echo "<input type='hidden' name='estado' value='inserir'>";
+    echo "<input type='submit' name='submit' value='submit'>";
+}
 ?>
