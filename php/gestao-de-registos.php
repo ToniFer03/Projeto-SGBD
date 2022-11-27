@@ -27,7 +27,7 @@ if (is_user_logged_in()){ //checks if the user is logged in
             echo "<p> Introduza os dados pessoais básicos da criança: </p>";
             formulario_site($indicesFormulario);
         } else {
-            switch ($_POST["estado"]) {
+            switch ($_REQUEST["estado"]) {
                 case 'validar':
                     echo "<h3> Dados de registo - validação </h3>";
                     validar_formulario($indicesFormulario, $valoresValidados, $errosFormulario);
@@ -208,20 +208,26 @@ function get_values_child($child_wanted, $item_wanted){
 
 function formulario_site($indicesFormulario){
     echo "<form action'#' method='POST'>";
+
     //Nome da Criança
-    echo "Nome Completo: <input type='text' maxlength='128' name='$indicesFormulario[0]'>";
+    echo "<label for=$indicesFormulario[0]><Strong>Nome da criança:</Strong><em> - Nome completo (*Campo obrigatório)</em></label><br>";
+    echo "<input type='text' maxlength='128' name='$indicesFormulario[0]'>";
 
     //Data de nascimento
-    echo "Data de Nascimento: <input type='text' name='$indicesFormulario[1]'>";
+    echo "<label for=$indicesFormulario[1]><Strong>Data de nascimento:</Strong><em> - Formato (AAAA-MM-DD) (*Campo obrigatório)</em></label><br>";
+    echo "<input type='text' name='$indicesFormulario[1]'>";
 
     //nome encarregado de educação
-    echo "Nome Enc. Educação: <input type='text' maxlength='128' name='$indicesFormulario[2]'>";
+    echo "<label for=$indicesFormulario[2]><Strong>Nome do Enc. Educação:</Strong><em> - Nome completo (*Campo obrigatório)</em></label><br>";
+    echo "<input type='text' maxlength='128' name='$indicesFormulario[2]'>";
 
     //telefone encarregado de educação
-    echo "Telefone Enc. Edu: <input type='text' name='$indicesFormulario[3]'>";
+    echo "<label for=$indicesFormulario[3]><Strong>Telefone Enc. Educação:</Strong><em> - Formato (9 digitos, sem indicativo) (*Campo Obrigatório)</em></label><br>";
+    echo "<input type='text' name='$indicesFormulario[3]'>";
 
     //email encarregado de educação
-    echo "Email do tutor: <input type='text' name='$indicesFormulario[4]'>";
+    echo "<label for=$indicesFormulario[4]><Strong>Email Enc. Educação:</Strong></label><br>";
+    echo "<input type='text' name='$indicesFormulario[4]'>";
 
     echo "<input type='hidden' name='estado' value='validar'>";
     echo "<input type='submit' name='submit' value='submit'>";
@@ -236,10 +242,10 @@ function testar_input($data){
 
 function validar_formulario($indicesFormulario, &$valoresValidados, &$errosFormulario){
 
-    if(empty($_POST[$indicesFormulario[0]])) {
+    if(empty($_REQUEST[$indicesFormulario[0]])) {
         $errosFormulario[$indicesFormulario[0]] = "Nome é obrigatório! Por favor preencha o nome da criança.";
     } else {
-            $valoresValidados[$indicesFormulario[0]] = testar_input($_POST[$indicesFormulario[0]]);
+            $valoresValidados[$indicesFormulario[0]] = testar_input($_REQUEST[$indicesFormulario[0]]);
 
             //fazer check do nome
             if (!preg_match("/[a-zA-Z\x{00C0}-\x{00ff} ]+/u", $valoresValidados[$indicesFormulario[0]])) {
@@ -248,10 +254,10 @@ function validar_formulario($indicesFormulario, &$valoresValidados, &$errosFormu
     }
 
     //validação da data de nascimento
-    if(empty($_POST[$indicesFormulario[1]])) {
+    if(empty($_REQUEST[$indicesFormulario[1]])) {
             $errosFormulario[$indicesFormulario[1]] = "Data de nascimento é obrigatória! Por favor preencha a data de nascimento da criança.";
         } else {
-            $valoresValidados[$indicesFormulario[1]] = testar_input($_POST[$indicesFormulario[1]]);
+            $valoresValidados[$indicesFormulario[1]] = testar_input($_REQUEST[$indicesFormulario[1]]);
 
             //fazer check do email
             if (!preg_match("/^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$/", $valoresValidados[$indicesFormulario[1]])) {
@@ -260,10 +266,10 @@ function validar_formulario($indicesFormulario, &$valoresValidados, &$errosFormu
     }
 
     //validação do nome do encarregado de educação
-    if(empty($_POST[$indicesFormulario[2]])) {
+    if(empty($_REQUEST[$indicesFormulario[2]])) {
         $errosFormulario[$indicesFormulario[2]] = "Nome do Encarregado de Educação é obrigatório! Por favor insira o nome do Encarregado de Educação.";
     } else {
-        $valoresValidados[$indicesFormulario[2]] = testar_input($_POST[$indicesFormulario[2]]);
+        $valoresValidados[$indicesFormulario[2]] = testar_input($_REQUEST[$indicesFormulario[2]]);
 
         //fazer o check do nome do encarregado de educação
         if (!preg_match("/[a-zA-Z\x{00C0}-\x{00ff} ]+/u", $valoresValidados[$indicesFormulario[2]])) {
@@ -271,10 +277,10 @@ function validar_formulario($indicesFormulario, &$valoresValidados, &$errosFormu
         }
     }
 
-    if(empty($_POST[$indicesFormulario[3]])) {
+    if(empty($_REQUEST[$indicesFormulario[3]])) {
         $errosFormulario[$indicesFormulario[3]] = "Numéro de telefone do Encarregado de educação é obrigatório!";
     } else {
-        $valoresValidados[$indicesFormulario[3]] = testar_input($_POST[$indicesFormulario[3]]);
+        $valoresValidados[$indicesFormulario[3]] = testar_input($_REQUEST[$indicesFormulario[3]]);
 
         //fazer o check para o número de telefone
         if (!preg_match("/^\d{9}$/", $valoresValidados     [$indicesFormulario[3]])) {
@@ -282,7 +288,7 @@ function validar_formulario($indicesFormulario, &$valoresValidados, &$errosFormu
         }
     }
     
-    $valoresValidados[$indicesFormulario[4]] = testar_input($_POST[$indicesFormulario[4]]);
+    $valoresValidados[$indicesFormulario[4]] = testar_input($_REQUEST[$indicesFormulario[4]]);
 
     //validar o email
     if(!filter_var($valoresValidados[$indicesFormulario[4]], FILTER_VALIDATE_EMAIL)){
@@ -332,11 +338,11 @@ function inserir_dados($table, $indicesFormulario, $collums_insert){
     $query = $query . "(" . implode(" , ", $collums_insert) . ") ";
 
     $query = $query . " Values (";
-    $query = $query . "'". $_POST[$indicesFormulario[0]] .  "' ";
-    $query = $query . ", " . "'". $_POST[$indicesFormulario[1]] .  "' ";
-    $query = $query . ", " . "'". $_POST[$indicesFormulario[2]] .  "' ";
-    $query = $query . ", " . $_POST[$indicesFormulario[3]] .  " ";
-    $query = $query . ", " . "'". $_POST[$indicesFormulario[4]] .  "' ";
+    $query = $query . "'". $_REQUEST[$indicesFormulario[0]] .  "' ";
+    $query = $query . ", " . "'". $_REQUEST[$indicesFormulario[1]] .  "' ";
+    $query = $query . ", " . "'". $_REQUEST[$indicesFormulario[2]] .  "' ";
+    $query = $query . ", " . $_REQUEST[$indicesFormulario[3]] .  " ";
+    $query = $query . ", " . "'". $_REQUEST[$indicesFormulario[4]] .  "' ";
     $query = $query . " )";
 
     //execução da query
