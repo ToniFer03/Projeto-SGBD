@@ -59,7 +59,7 @@ if (is_user_logged_in()){ //checks if the user is logged in
         voltarAtras();
     }
 } else {
-    print "user is not logged in";
+    print "User is not logged in!";
 }
 
 
@@ -112,10 +112,18 @@ function create_table($collums, $table, $orderColumn){
         echo "<td>";
         if($itemName[0] != 0){
             foreach($itemName as $value){
-            $string = $value . ":";
-            $string = $string . " " . get_values_child($row[0], $value);
-            $string = ucfirst($string);
-            echo "$string <br/>";
+                $temp = ucfirst($value);
+                echo "$temp: "; 
+                $subitemName = get_subitem_names($row[0], $value); 
+                foreach($subitemName as $nome_subitem){
+                    $subitemValue = get_values_subitems($row[0], $nome_subitem, $value);
+                    echo "<strong>$nome_subitem</strong> (";
+                    echo implode(", ",$subitemValue);
+                    echo "); ";
+                }
+                echo "<br/>";
+
+               //echo "$string <br/>";
             }
         }
         echo "</td>
@@ -174,21 +182,19 @@ function get_item($child_wanted){
     return $itemName;
 }
 
-//função que busca todos os valores das crianças
-function get_values_child($child_wanted, $item_wanted){
+//função que busca todos os subitems pertencentes a um item de uma dada criança
+function get_subitem_names($child_wanted, $item_wanted){
     //variáveis a serem usadas nas queries
-    $collums = array("value.value", "subitem.name");
+    $collums = array("subitem.name");
     $tables = array("child, value, item, subitem");
     $conditions = array("$child_wanted = value.child_id", "value.subitem_id = subitem.id", 
     "subitem.item_id = item.id", "item.name Like");
-    $order = "item.name";
 
     //criação da query
     $query = "Select Distinct ". implode(",", $collums) . " ";
     $query = $query . "From ". implode(",", $tables) . " ";
     $query = $query . "where " . implode(" and ", $conditions) . " ";
     $query = $query . '"' . $item_wanted . '" '; 
-    $query = $query . "Order by $order";
     
     //execução da query
     $result = mysqli_query($GLOBALS['link'], $query);
@@ -196,14 +202,43 @@ function get_values_child($child_wanted, $item_wanted){
     if(!$result) {
         die ("O query falhou: " . mysqli_error($GLOBALS['link']));
     }
-    
-    $string = "";
+
+    $i = 0;
     while ($row = mysqli_fetch_array($result, MYSQLI_NUM)){
-        $string = $string . $row[1] . " ";
-        $string = $string . "(" . $row[0] . "); ";
+        $subitemArray[$i++] = $row[0];
+    }
+
+    return $subitemArray;
+}
+
+//função que busca todos os valores dos subitems obtidos de outra funçao
+function get_values_subitems($child_wanted, $subItemWanted, $item_wanted){
+    //variáveis a serem usadas nas queries
+    $collums = array("value.value");
+    $tables = array("child, value, item, subitem");
+    $conditions = array("$child_wanted = value.child_id", "value.subitem_id = subitem.id", 
+    "subitem.item_id = item.id", "item.name Like");
+
+    //criação da query
+    $query = "Select Distinct ". implode(",", $collums) . " ";
+    $query = $query . "From ". implode(",", $tables) . " ";
+    $query = $query . "where " . implode(" and ", $conditions) . " ";
+    $query = $query . '"' . $item_wanted . '" and ';
+    $query = $query . 'subitem.name Like "' . $subItemWanted . '" '; 
+    
+    //execução da query
+    $result = mysqli_query($GLOBALS['link'], $query);
+
+    if(!$result) {
+        die ("O query falhou: " . mysqli_error($GLOBALS['link']));
+    }
+
+    $i = 0;
+    while ($row = mysqli_fetch_array($result, MYSQLI_NUM)){
+        $value_subitem_array[$i++] = $row[0];
     }
     
-    return $string;
+    return $value_subitem_array;
 }
 
 function formulario_site($indicesFormulario){
