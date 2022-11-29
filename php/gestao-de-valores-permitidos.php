@@ -64,6 +64,7 @@ function create_table($collums){
     //test 
     foreach($itemArray as $value){
         $numberRowsItems = get_number_rows_item($value);
+        $numberRowsItems = $numberRowsItems + get_number_subitems($value);
         echo "<tr>";
         echo "<td rowspan='$numberRowsItems'> $value </td>";
         get_subitem_array($value);
@@ -97,8 +98,8 @@ function create_table($collums){
 function get_item_array(){
     //declarar variáveis
     $collumsWanted = "item.name";
-    $conditions = array("subitem_allowed_value.subitem_id = subitem.id", "subitem.value_type = 'enum'", "item.id = subitem.item_id");
-    $tables = array("subitem_allowed_value", "subitem", "item");
+    $conditions = array("item.id = subitem.item_id");
+    $tables = array("subitem", "item");
     $itemArray = [];
 
     //construção da query
@@ -148,6 +149,8 @@ function get_number_rows_item($itemName){
         $numberRows = $row[0];
     }
 
+    //for the subitems that dont have allowed values
+
     return $numberRows;
 }
 
@@ -179,11 +182,69 @@ function get_number_rows_subitem($itemName, $subitemID){
     return $numberRows;
 }
 
+function get_number_subitems($itemName){
+    //declarar variáveis
+    $collumsWanted = "subitem.id";
+    $conditions = array("item.id = subitem.item_id", "item.name like '$itemName'");
+    $tables = array("subitem", "item");
+
+    //construção da query
+    $query = "Select COUNT(DISTINCT $collumsWanted) "; 
+    $query = $query . "From " . implode(", ", $tables);
+    $query = $query . " Where " . implode(" and ", $conditions);
+
+
+    //execução da query
+    $result = mysqli_query($GLOBALS['link'], $query);
+    
+    if(!$result) {
+        die ("O query falhou: " . mysqli_error($GLOBALS['link']));
+    } 
+
+    //recebe todas as linhas do query
+    $i = 0;
+    while($row = mysqli_fetch_array($result, MYSQLI_NUM)){
+        $numberRows = $row[0];
+    }
+
+    $number = $numberRows - temp_subitems_func($itemName);
+
+    return $number;
+}
+
+function temp_subitems_func($itemName){
+    //declarar variáveis
+    $collumsWanted = "subitem.id";
+    $conditions = array("subitem_allowed_value.subitem_id = subitem.id", "subitem.value_type = 'enum'", "item.id = subitem.item_id", "item.name like '$itemName'");
+    $tables = array("subitem_allowed_value", "subitem", "item");
+
+    //construção da query
+    $query = "Select COUNT(DISTINCT $collumsWanted) "; 
+    $query = $query . "From " . implode(", ", $tables);
+    $query = $query . " Where " . implode(" and ", $conditions);
+
+
+    //execução da query
+    $result = mysqli_query($GLOBALS['link'], $query);
+    
+    if(!$result) {
+        die ("O query falhou: " . mysqli_error($GLOBALS['link']));
+    } 
+
+    //recebe todas as linhas do query
+    $i = 0;
+    while($row = mysqli_fetch_array($result, MYSQLI_NUM)){
+        $number = $row[0];
+    }
+
+    return $number;
+}
+
 function get_subitem_array($itemName){
     //declarar variáveis
     $collumsWanted = "subitem.name, subitem.id";
-    $conditions = array("subitem_allowed_value.subitem_id = subitem.id", "subitem.value_type = 'enum'", "item.id = subitem.item_id", "item.name like '$itemName'");
-    $tables = array("subitem_allowed_value", "subitem", "item");
+    $conditions = array("item.id = subitem.item_id", "item.name like '$itemName'");
+    $tables = array("subitem", "item");
 
     //construção da query
     $query = "Select DISTINCT $collumsWanted "; 
@@ -202,17 +263,32 @@ function get_subitem_array($itemName){
     $firstPass = true;
     while($row = mysqli_fetch_array($result, MYSQLI_NUM)){
         $numberRowsSubitems = get_number_rows_subitem($itemName, $row[1]);
-        if($firstPass){
-            echo "<td rowspan='$numberRowsSubitems'> $row[1] </td>";
-            echo "<td rowspan='$numberRowsSubitems'> $row[0] </td>";
-            get_allowed_values_array($itemName, $row[1]);
-            $firstPass = false;
+        if($numberRowsSubitems == 0){
+            if($firstPass){
+                echo "<td> $row[1] </td>";
+                echo "<td> $row[0] </td>";
+                echo "<td colspan='4'> Não há valores permitidos definidos</td>";;
+                $firstPass = false;
+            } else {
+                echo "<tr>";
+                echo "<td> $row[1] </td>";
+                echo "<td> $row[0] </td>";
+                echo "<td colspan='4'> Não há valores permitidos definidos</td>";
+                echo "</tr>";
+            }
         } else {
-            echo "<tr>";
-            echo "<td rowspan='$numberRowsSubitems'> $row[1] </td>";
-            echo "<td rowspan='$numberRowsSubitems'> $row[0] </td>";
-            get_allowed_values_array($itemName, $row[1]);
-            echo "</tr>";
+            if($firstPass){
+                echo "<td rowspan='$numberRowsSubitems'> $row[1] </td>";
+                echo "<td rowspan='$numberRowsSubitems'> $row[0] </td>";
+                get_allowed_values_array($itemName, $row[1]);
+                $firstPass = false;
+            } else {
+                echo "<tr>";
+                echo "<td rowspan='$numberRowsSubitems'> $row[1] </td>";
+                echo "<td rowspan='$numberRowsSubitems'> $row[0] </td>";
+                get_allowed_values_array($itemName, $row[1]);
+                echo "</tr>";
+            }
         }
     }
 }
