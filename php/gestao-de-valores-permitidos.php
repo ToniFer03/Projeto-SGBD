@@ -64,32 +64,11 @@ function create_table($collums){
     //test 
     foreach($itemArray as $value){
         $numberRowsItems = get_number_rows_item($value);
-        $numberRowsItems = $numberRowsItems + get_number_subitems($value);
         echo "<tr>";
         echo "<td rowspan='$numberRowsItems'> $value </td>";
         get_subitem_array($value);
         echo "</tr>";
     }
-        /*
-    echo "<tr>";
-    echo "<td rowspan='$numberRowsItems'> Austismo </td>";
-    echo "<td> 3 </td>";
-    echo "<td> Grau </td>";
-    echo "<td> 4 </td>";
-    echo "<td>  ligeiro </td>";
-    echo "<td> ativo </td>";
-    echo "<td> editar </td>";
-    echo "</tr>";
-
-    echo "<tr>";
-    echo "<td> 4 </td>";
-    echo "<td> Grau </td>";
-    echo "<td> 6 </td>";
-    echo "<td>  ligeiro </td>";
-    echo "<td> ativo </td>";
-    echo "<td> editar </td>";
-    echo "</tr>";
-    */
 
     echo"</table>";
 }
@@ -124,17 +103,20 @@ function get_item_array(){
     return $itemArray;
 }
 
-function get_number_rows_item($itemName){
-    //declarar variáveis
-    $collumsWanted = "subitem_allowed_value.value";
-    $conditions = array("subitem_allowed_value.subitem_id = subitem.id", "subitem.value_type = 'enum'", "item.id = subitem.item_id", "item.name like '$itemName'");
-    $tables = array("subitem_allowed_value", "subitem", "item");
-
+/*
+This function receives the indication if it is to be a distinct count or not, the tables to be included and the conditions and return a count of what we want based on that information
+*/
+function get_count_numbers($isDistinct, $collums, $tables, $conditions){
     //construção da query
-    $query = "Select COUNT($collumsWanted) "; 
-    $query = $query . "From " . implode(", ", $tables);
-    $query = $query . " Where " . implode(" and ", $conditions);
-    $query = $query . " Order by subitem.name";
+    if($isDistinct){
+        $query = "Select COUNT(DISTINCT " . implode(",", $collums). ") "; 
+        $query = $query . "From " . implode(", ", $tables);
+        $query = $query . " Where " . implode(" and ", $conditions);
+    } else {
+        $query = "Select COUNT(" . implode(",", $collums). ") "; 
+        $query = $query . "From " . implode(", ", $tables);
+        $query = $query . " Where " . implode(" and ", $conditions);
+    }
 
     //execução da query
     $result = mysqli_query($GLOBALS['link'], $query);
@@ -144,100 +126,55 @@ function get_number_rows_item($itemName){
     } 
 
     //recebe todas as linhas do query
-    $i = 0;
     while($row = mysqli_fetch_array($result, MYSQLI_NUM)){
-        $numberRows = $row[0];
+        $numberCount = $row[0];
     }
-
-    //for the subitems that dont have allowed values
-
-    return $numberRows;
+    
+    return $numberCount;
 }
 
+//function that returns how many rows should an item ocuppy
+function get_number_rows_item($itemName){
+    //gets the number of allowed values for any item
+    $isDistinct = false;
+    $collums = array('*');
+    $tables = array("subitem_allowed_value", "subitem", "item");
+    $conditions = array("subitem_allowed_value.subitem_id = subitem.id", "subitem.value_type = 'enum'", "item.id = subitem.item_id", "item.name like '$itemName'");
+
+    $result = get_count_numbers($isDistinct, $collums, $tables, $conditions);
+
+
+    //gets the number of all subitems
+    $isDistinct = true;
+    $collums = array("subitem.id");
+    $tables = array("subitem", "item");
+    $conditions = array("item.id = subitem.item_id", "item.name like '$itemName'");
+
+    $result = $result + get_count_numbers($isDistinct, $collums, $tables, $conditions);
+
+
+    //get the number of subitems with allowed values
+    $isDistinct = true;
+    $collums = array("subitem.id");
+    $tables = array("subitem_allowed_value", "subitem", "item");
+    $conditions = array("subitem_allowed_value.subitem_id = subitem.id", "subitem.value_type = 'enum'", "item.id = subitem.item_id", "item.name like '$itemName'");
+
+    $result = $result - get_count_numbers($isDistinct, $collums, $tables, $conditions);
+
+    return $result;
+}
+
+//function that return how many rows should a subitem ocuppy
 function get_number_rows_subitem($itemName, $subitemID){
     //declarar variáveis
-    $collumsWanted = "subitem_allowed_value.value";
+    $isDistinct = true;
+    $collums = array("subitem_allowed_value.value");
+    $tables = array("subitem_allowed_value", "subitem", "item");
     $conditions = array("subitem_allowed_value.subitem_id = subitem.id", "subitem.value_type = 'enum'", "item.id = subitem.item_id", "item.name like '$itemName'", "subitem.id = $subitemID");
-    $tables = array("subitem_allowed_value", "subitem", "item");
 
-    //construção da query
-    $query = "Select COUNT(DISTINCT $collumsWanted) "; 
-    $query = $query . "From " . implode(", ", $tables);
-    $query = $query . " Where " . implode(" and ", $conditions);
+    $result = get_count_numbers($isDistinct, $collums, $tables, $conditions);
 
-
-    //execução da query
-    $result = mysqli_query($GLOBALS['link'], $query);
-    
-    if(!$result) {
-        die ("O query falhou: " . mysqli_error($GLOBALS['link']));
-    } 
-
-    //recebe todas as linhas do query
-    $i = 0;
-    while($row = mysqli_fetch_array($result, MYSQLI_NUM)){
-        $numberRows = $row[0];
-    }
-
-    return $numberRows;
-}
-
-function get_number_subitems($itemName){
-    //declarar variáveis
-    $collumsWanted = "subitem.id";
-    $conditions = array("item.id = subitem.item_id", "item.name like '$itemName'");
-    $tables = array("subitem", "item");
-
-    //construção da query
-    $query = "Select COUNT(DISTINCT $collumsWanted) "; 
-    $query = $query . "From " . implode(", ", $tables);
-    $query = $query . " Where " . implode(" and ", $conditions);
-
-
-    //execução da query
-    $result = mysqli_query($GLOBALS['link'], $query);
-    
-    if(!$result) {
-        die ("O query falhou: " . mysqli_error($GLOBALS['link']));
-    } 
-
-    //recebe todas as linhas do query
-    $i = 0;
-    while($row = mysqli_fetch_array($result, MYSQLI_NUM)){
-        $numberRows = $row[0];
-    }
-
-    $number = $numberRows - temp_subitems_func($itemName);
-
-    return $number;
-}
-
-function temp_subitems_func($itemName){
-    //declarar variáveis
-    $collumsWanted = "subitem.id";
-    $conditions = array("subitem_allowed_value.subitem_id = subitem.id", "subitem.value_type = 'enum'", "item.id = subitem.item_id", "item.name like '$itemName'");
-    $tables = array("subitem_allowed_value", "subitem", "item");
-
-    //construção da query
-    $query = "Select COUNT(DISTINCT $collumsWanted) "; 
-    $query = $query . "From " . implode(", ", $tables);
-    $query = $query . " Where " . implode(" and ", $conditions);
-
-
-    //execução da query
-    $result = mysqli_query($GLOBALS['link'], $query);
-    
-    if(!$result) {
-        die ("O query falhou: " . mysqli_error($GLOBALS['link']));
-    } 
-
-    //recebe todas as linhas do query
-    $i = 0;
-    while($row = mysqli_fetch_array($result, MYSQLI_NUM)){
-        $number = $row[0];
-    }
-
-    return $number;
+    return $result;
 }
 
 function get_subitem_array($itemName){
