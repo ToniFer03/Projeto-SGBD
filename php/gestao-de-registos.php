@@ -62,27 +62,15 @@ if (is_user_logged_in()){ //checks if the user is logged in
 }
 
 
-/* 
-Para funções de queries necessário realizar os procedimentos a baixo
-ter uma variável para a query
-ter uma variável result que obtem o resultado da query
-e ter uma variável row que busque cada linha do resultado acima
-*/
 function count_rows($table){
-    //criação da query
-    $query = "Select count(1) from $table"; 
+    $isDistinct = false;
+    $collum = array('*');
+    $table = array($table);
+    $conditions = array("TRUE"); //Não existem condições, logo usado o true
 
-    //execução da query
-    $result = mysqli_query($GLOBALS['link'], $query);
+    $result = get_count_numbers($isDistinct, $collum, $table, $conditions);
 
-    if(!$result) {
-        die ("O query falhou: " . mysqli_error($GLOBALS['link']));
-    }
-
-
-    //processamento do resultado da query
-    $row = mysqli_fetch_array($result, MYSQLI_NUM);
-    return $row[0];
+    return $result;
 }
 
 //função para a criação da tabela
@@ -133,16 +121,13 @@ function create_table($collums, $table, $orderColumn){
 
 //função que recebe todas as linhas de uma tabela, ordenada
 function get_all_rows($table, $orderColumn){
-    //criação da query
-    $query = "Select * from $table ";
-    $query = $query . "Order By $orderColumn";
+    $isDistinct = false;
+    $collums = array('*');
+    $tables = array($table);
+    $conditions = array("TRUE");
+    $order = $orderColumn;
 
-    //execução da query
-    $result = mysqli_query($GLOBALS['link'], $query);
-
-    if(!$result) {
-        die ("O query falhou: " . mysqli_error($GLOBALS['link']));
-    }
+    $result = get_select_query($isDistinct, $collums, $tables, $conditions, $order);
 
     return $result;
 }
@@ -150,31 +135,18 @@ function get_all_rows($table, $orderColumn){
 //função para obter todos os itens
 function get_item($child_wanted){
     //variáveis a serem usadas nas querys
-    $collum = "item.name";
+    $isDistinct = true;
+    $collums = array("item.name");
     $tables = array("child, value, item, subitem");
-    $conditions = array("$child_wanted = value.child_id", "value.subitem_id = subitem.id", 
-    "subitem.item_id = item.id");
+    $conditions = array("$child_wanted = value.child_id", "value.subitem_id = subitem.id", "subitem.item_id = item.id");
     $order = "item.name";
 
-    //criação da query
-    $query = "Select Distinct " . $collum . " ";
-    $query = $query . "From ". implode(",", $tables) . " ";
-    $query = $query . "where " . implode(" and ", $conditions) . " ";
-    $query = $query . "Order by " . $order;
+    $result = get_select_query($isDistinct, $collums, $tables, $conditions, $order);
 
-    //execução da query
-    $result = mysqli_query($GLOBALS['link'], $query);
-
-    if(!$result) {
-        die ("O query falhou: " . mysqli_error($GLOBALS['link']));
-    }
-
-    $itemName[0] = 0;
-
-    $contador = 0;
+    $i = 0;
+    $itemName[0] = 0; 
     while ($row = mysqli_fetch_array($result, MYSQLI_NUM)){
-        $itemName[$contador] = $row[0];
-        $contador = $contador + 1;
+        $itemName[$i++] = $row[0];
     }
 
     return $itemName;
@@ -183,23 +155,13 @@ function get_item($child_wanted){
 //função que busca todos os subitems pertencentes a um item de uma dada criança
 function get_subitem_names($child_wanted, $item_wanted){
     //variáveis a serem usadas nas queries
+    $isDistinct = true;
     $collums = array("subitem.name");
-    $tables = array("child, value, item, subitem");
-    $conditions = array("$child_wanted = value.child_id", "value.subitem_id = subitem.id", 
-    "subitem.item_id = item.id", "item.name Like");
+    $tables = array("child", "value", "item", "subitem");
+    $conditions = array("$child_wanted = value.child_id", "value.subitem_id = subitem.id", "subitem.item_id = item.id", "item.name = '$item_wanted'");
+    $order = "(Select NULL)";
 
-    //criação da query
-    $query = "Select Distinct ". implode(",", $collums) . " ";
-    $query = $query . "From ". implode(",", $tables) . " ";
-    $query = $query . "where " . implode(" and ", $conditions) . " ";
-    $query = $query . '"' . $item_wanted . '" '; 
-    
-    //execução da query
-    $result = mysqli_query($GLOBALS['link'], $query);
-
-    if(!$result) {
-        die ("O query falhou: " . mysqli_error($GLOBALS['link']));
-    }
+    $result = get_select_query($isDistinct, $collums, $tables, $conditions, $order);
 
     $i = 0;
     while ($row = mysqli_fetch_array($result, MYSQLI_NUM)){
@@ -212,24 +174,13 @@ function get_subitem_names($child_wanted, $item_wanted){
 //função que busca todos os valores dos subitems obtidos de outra funçao
 function get_values_subitems($child_wanted, $subItemWanted, $item_wanted){
     //variáveis a serem usadas nas queries
+    $isDistinct = true;
     $collums = array("value.value");
-    $tables = array("child, value, item, subitem");
-    $conditions = array("$child_wanted = value.child_id", "value.subitem_id = subitem.id", 
-    "subitem.item_id = item.id", "item.name Like");
+    $tables = array("child", "value", "item", "subitem");
+    $conditions = array("$child_wanted = value.child_id", "value.subitem_id = subitem.id", "subitem.item_id = item.id", "item.name Like '$item_wanted'", "subitem.name Like '$subItemWanted'");
+    $order = "(Select NULL)";
 
-    //criação da query
-    $query = "Select Distinct ". implode(",", $collums) . " ";
-    $query = $query . "From ". implode(",", $tables) . " ";
-    $query = $query . "where " . implode(" and ", $conditions) . " ";
-    $query = $query . '"' . $item_wanted . '" and ';
-    $query = $query . 'subitem.name Like "' . $subItemWanted . '" '; 
-    
-    //execução da query
-    $result = mysqli_query($GLOBALS['link'], $query);
-
-    if(!$result) {
-        die ("O query falhou: " . mysqli_error($GLOBALS['link']));
-    }
+    $result = get_select_query($isDistinct, $collums, $tables, $conditions, $order);
 
     $i = 0;
     while ($row = mysqli_fetch_array($result, MYSQLI_NUM)){
