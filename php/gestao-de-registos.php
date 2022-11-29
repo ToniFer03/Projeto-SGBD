@@ -62,7 +62,6 @@ if (is_user_logged_in()){ //checks if the user is logged in
 }
 
 
-
 /* 
 Para funções de queries necessário realizar os procedimentos a baixo
 ter uma variável para a query
