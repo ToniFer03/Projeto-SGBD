@@ -17,9 +17,8 @@ if (is_user_logged_in()){ //checks if the user is logged in
             if($num_child == 0){
                 print("Não há crianças!");
             } else {
-                $collums = array("Nome", "Data de nascimento", "Enc. de educação",
-            "Telefone do Enc.", "e-mail", "registos");
-            $orderColumn = "name";
+                $collums = array("Nome", "Data de nascimento", "Enc. de educação", "Telefone do Enc.", "e-mail", "registos");
+                $orderColumn = "name";
                 create_table($collums, $table, $orderColumn);
             }
             //apos a tabela
