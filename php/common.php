@@ -17,9 +17,9 @@ function voltarAtras(){ //função para voltar atrás
     </noscript>";
 }
 
-function get_enum_values($connection, $table, $column){ //função para buscar o número de linhas a construir
+function get_enum_values($table, $column){
     $query = " SHOW COLUMNS FROM `$table` LIKE '$column' ";
-    $result = mysqli_query($connection, $query );
+    $result = mysqli_query($GLOBALS['link'], $query);
     $row = mysqli_fetch_array($result , MYSQLI_NUM );
     #extract the values
     #the values are enclosed in single quotes

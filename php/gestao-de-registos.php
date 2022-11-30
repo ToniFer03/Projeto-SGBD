@@ -182,12 +182,38 @@ function get_values_subitems($child_wanted, $subItemWanted, $item_wanted){
 
     $result = get_select_query($isDistinct, $collums, $tables, $conditions, $order);
 
+    $unittype = get_unit_type($subItemWanted);
+
     $i = 0;
     while ($row = mysqli_fetch_array($result, MYSQLI_NUM)){
-        $value_subitem_array[$i++] = $row[0];
+        if(($unittype != "nenhum") && (is_numeric($row[0]))){
+            $value_subitem_array[$i++] = $row[0] . " $unittype";
+        } else {
+            $value_subitem_array[$i++] = $row[0];
+        }
     }
     
     return $value_subitem_array;
+}
+
+function get_unit_type($subitem){
+    $isDistinct = false;
+    $collums = array("subitem_unit_type.name");
+    $tables = array("subitem", "subitem_unit_type");
+    $conditions = array("subitem.name = '$subitem'", "subitem.unit_type_id = subitem_unit_type.id");
+    $order = "(Select NULL)";
+
+    $result = get_select_query($isDistinct, $collums, $tables, $conditions, $order);
+
+    $row = mysqli_fetch_array($result, MYSQLI_NUM);
+
+    if(is_null($row)){
+        $unittype = "nenhum";
+    } else {
+        $unittype = $row[0];
+    }
+
+    return $unittype;
 }
 
 function formulario_site($indicesFormulario){
