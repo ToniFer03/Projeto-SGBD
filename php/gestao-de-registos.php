@@ -217,7 +217,7 @@ function get_unit_type($subitem){
 }
 
 function formulario_site($indicesFormulario){
-    echo "<form action'#' method='POST'>";
+    echo "<form action='#' method='POST'>";
 
     //Nome da Criança
     echo "<label for=$indicesFormulario[0]><Strong>Nome da criança:</Strong><em> - Nome completo (*Campo obrigatório)</em></label><br>";
@@ -241,13 +241,6 @@ function formulario_site($indicesFormulario){
 
     echo "<input type='hidden' name='estado' value='validar'>";
     echo "<input type='submit' name='submit' value='submit'>";
-}
-
-function testar_input($data){
-    $data = trim($data);
-    $data = stripslashes($data);
-    $data = htmlspecialchars($data);
-    return $data;
 }
 
 function validar_formulario($indicesFormulario, &$valoresValidados, &$errosFormulario){
@@ -366,6 +359,7 @@ function inserir_dados($table, $indicesFormulario, $collums_insert){
 
     $temp = $GLOBALS['current_page'];
     echo "<p> ";
-    echo "<a href=$temp> Voltar a página inicial </a> </p>";
+    echo "<em> Clique em <strong>Continuar</strong> para avançar</em><br>";
+    echo "<a href=$temp> Continuar </a></p>";
 }
 ?>

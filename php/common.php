@@ -30,6 +30,14 @@ function get_enum_values($table, $column){
     return( $enum_fields );   
 }
 
+//function to test all inputs
+function testar_input($data){
+    $data = trim($data);
+    $data = stripslashes($data);
+    $data = htmlspecialchars($data);
+    return $data;
+}
+
 /* This function receives the indication if it is to be a distinct count or not, the collums, the tables to be included and the conditions and return a count of what we want based on that information. Notes: In case there are no conditions to be used, simply pass an array with the string TRUE, DISTINCT can´t be used with an (*) in that case pass for example 1 in place of the asterisc */
 function get_count_numbers($isDistinct, $collums, $tables, $conditions){
     //construção da query
