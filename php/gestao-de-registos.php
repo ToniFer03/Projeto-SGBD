@@ -251,7 +251,7 @@ function validar_formulario($indicesFormulario, &$valoresValidados, &$errosFormu
             $valoresValidados[$indicesFormulario[0]] = testar_input($_REQUEST[$indicesFormulario[0]]);
 
             //fazer check do nome
-            if (!preg_match("/[a-zA-Z\x{00C0}-\x{00ff} ]+/u", $valoresValidados[$indicesFormulario[0]])) {
+            if (preg_match('/^[a-zA-Z\x{00C0}-\x{00ff}\s]+$/u', $valoresValidados[$indicesFormulario[0]]) == 0) {
                 $errosFormulario[$indicesFormulario[0]] = "Inseriu caracteres inválidos no nome da criança! Por favor corrija.";
              }
     }
@@ -275,7 +275,7 @@ function validar_formulario($indicesFormulario, &$valoresValidados, &$errosFormu
         $valoresValidados[$indicesFormulario[2]] = testar_input($_REQUEST[$indicesFormulario[2]]);
 
         //fazer o check do nome do encarregado de educação
-        if (!preg_match("/[a-zA-Z\x{00C0}-\x{00ff} ]+/u", $valoresValidados[$indicesFormulario[2]])) {
+        if (!preg_match('/^[a-zA-Z\x{00C0}-\x{00ff}\s]+$/u', $valoresValidados[$indicesFormulario[2]])) {
             $errosFormulario[$indicesFormulario[2]] = "Inseriu caracteres inválidos no Nome do Encarregado de Educação! Por favor corrija.";
         }
     }
