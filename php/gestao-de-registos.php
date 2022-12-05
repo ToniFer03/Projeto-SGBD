@@ -98,18 +98,23 @@ function create_table($collums, $table, $orderColumn){
         echo "<td>";
         if($itemName[0] != 0){
             foreach($itemName as $value){
-                $temp = ucfirst($value);
-                echo "$temp: "; 
-                $subitemName = get_subitem_names($row[0], $value); 
-                foreach($subitemName as $nome_subitem){
-                    $subitemValue = get_values_subitems($row[0], $nome_subitem, $value);
-                    echo "<strong>$nome_subitem</strong> (";
-                    echo implode(", ",$subitemValue);
-                    echo "); ";
+                $temp = strtoupper($value);
+                echo "$temp: <br/>"; 
+                $value_information = get_values_info($row[0], $value);
+                foreach($value_information as $info){
+                    if(is_null($info[1])){
+                        $info[1] = "Null";
+                    }
+                    echo "$info[0] ($info[1]) - ";
+                    $subitemName = get_subitem_names($row[0], $value, $info[0], $info[1]); 
+                    foreach($subitemName as $nome_subitem){
+                        $subitemValue = get_values_subitems($row[0], $nome_subitem, $value, $info[0], $info[1]);
+                        echo "<strong>$nome_subitem</strong> (";
+                        echo implode(", ",$subitemValue);
+                        echo "); ";
+                    }   
+                    echo "<br/>";
                 }
-                echo "<br/>";
-
-               //echo "$string <br/>";
             }
         }
         echo "</td>
@@ -153,12 +158,18 @@ function get_item($child_wanted){
 }
 
 //função que busca todos os subitems pertencentes a um item de uma dada criança
-function get_subitem_names($child_wanted, $item_wanted){
+function get_subitem_names($child_wanted, $item_wanted, $date_wanted, $producer_wanted){
     //variáveis a serem usadas nas queries
     $isDistinct = true;
     $collums = array("subitem.name");
     $tables = array("child", "value", "item", "subitem");
-    $conditions = array("$child_wanted = value.child_id", "value.subitem_id = subitem.id", "subitem.item_id = item.id", "item.name = '$item_wanted'");
+
+    //in case the producer is null we need to use the IS NULL operator
+    if($producer_wanted == 'Null'){
+        $conditions = array("$child_wanted = value.child_id", "value.subitem_id = subitem.id", "subitem.item_id = item.id", "item.name = '$item_wanted'", "value.date = '$date_wanted'", "value.producer IS NULL");
+    } else {
+        $conditions = array("$child_wanted = value.child_id", "value.subitem_id = subitem.id", "subitem.item_id = item.id", "item.name = '$item_wanted'", "value.date = '$date_wanted'", "value.producer = '$producer_wanted'");
+    }
     $order = "(Select NULL)";
 
     $result = get_select_query($isDistinct, $collums, $tables, $conditions, $order);
@@ -171,13 +182,39 @@ function get_subitem_names($child_wanted, $item_wanted){
     return $subitemArray;
 }
 
+function get_values_info($child_wanted, $item_wanted){
+    //variáveis a serem usadas nas queries
+    $isDistinct = true;
+    $collums = array("value.date", "value.producer");
+    $tables = array("child", "value", "item", "subitem");
+    $conditions = array("$child_wanted = value.child_id", "value.subitem_id = subitem.id", "subitem.item_id = item.id", "item.name Like '$item_wanted'");
+    $order = "(Select NULL)";
+
+    $result = get_select_query($isDistinct, $collums, $tables, $conditions, $order);
+
+    $i = 0;
+    while ($row = mysqli_fetch_array($result, MYSQLI_NUM)){
+        $j = 0;
+        $temp[$j++] = $row[0];
+        $temp[$j++] = $row[1];
+        $dateArray[$i++] = $temp;
+    }
+
+    return $dateArray;
+}
+
 //função que busca todos os valores dos subitems obtidos de outra funçao
-function get_values_subitems($child_wanted, $subItemWanted, $item_wanted){
+function get_values_subitems($child_wanted, $subItemWanted, $item_wanted, $date_wanted, $producer_wanted){
     //variáveis a serem usadas nas queries
     $isDistinct = true;
     $collums = array("value.value");
     $tables = array("child", "value", "item", "subitem");
-    $conditions = array("$child_wanted = value.child_id", "value.subitem_id = subitem.id", "subitem.item_id = item.id", "item.name Like '$item_wanted'", "subitem.name Like '$subItemWanted'");
+    //in case the producer is null we need to use the IS NULL operator
+    if($producer_wanted == 'Null'){
+        $conditions = array("$child_wanted = value.child_id", "value.subitem_id = subitem.id", "subitem.item_id = item.id", "item.name Like '$item_wanted'", "subitem.name Like '$subItemWanted'", "value.date = '$date_wanted'", "value.producer IS NULL");
+    } else {
+        $conditions = array("$child_wanted = value.child_id", "value.subitem_id = subitem.id", "subitem.item_id = item.id", "item.name Like '$item_wanted'", "subitem.name Like '$subItemWanted'", "value.date = '$date_wanted'", "value.producer = '$producer_wanted'");
+    }
     $order = "(Select NULL)";
 
     $result = get_select_query($isDistinct, $collums, $tables, $conditions, $order);
