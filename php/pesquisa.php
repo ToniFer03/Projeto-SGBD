@@ -1,6 +1,7 @@
 <?php
 require_once "custom/php/common.php";
 $capability = 'search';
+$child_collums = array("id", "name", "birth_date", "tutor_name", "tutor_phone", "tutor_email");
 
 if(is_user_logged_in()){
     if(current_user_can($capability)){
@@ -12,8 +13,12 @@ if(is_user_logged_in()){
                 case 'escolha':
                     $_SESSION["item_id"] = $_REQUEST["ite"];; 
                     $_SESSION["item_name"] = getItemName($_SESSION["item_id"]);
+                    showTables($child_collums);
                     break;
                 case 'escolher_filtros':
+                    foreach($_REQUEST["obter"] as $value){
+                        echo $value;
+                    }
                     break;
                 case 'execucao':
                     break;
@@ -90,4 +95,71 @@ function getItemName($itemID){
     $row = mysqli_fetch_array($result, MYSQLI_NUM);
     return $row[0];
 }
+
+function showTables($child_collums){
+    $i = 0;
+    echo "<form action='#' method='POST'>";
+    //show beggining of table 1
+    echo "<table>";
+    echo "<tr>";
+    echo "<th> Atributos </th>";
+    echo "<th> Obter </th>";	
+    echo "<th> Filtro </th>";
+    echo "</tr>";
+
+    //show content of table 1
+    foreach($child_collums as $value){
+        echo "<tr>";
+        echo "<td> $value </td>";
+        echo "<td> <input type='checkbox' name='obter[]' value='$i'> </td>";
+        echo "<td> <input type='checkbox' name='filtro[]' value='$i'> </td>";
+        echo "</tr>";
+        $i++;
+    }
+
+    echo "</table>";
+
+    //show beggining of table 2
+    echo "<table>";
+    echo "<tr>";
+    echo "<th> Subitem </th>";
+    echo "<th> Obter </th>";
+    echo "<th> Filtro </th>";
+    echo "</tr>";
+
+    //show content of table 2
+    $subitems = getSubitems($_SESSION["item_id"]);
+    foreach($subitems as $value){
+        echo "<tr>";
+        echo "<td> $value </td>";
+        echo "<td> <input type='checkbox' name='obter[]' value='$i'> </td>";
+        echo "<td> <input type='checkbox' name='filtro[]' value='$i'> </td>";
+        echo "</tr>";
+        $i++;
+    }
+
+    echo "</table>";
+    echo "<input type='hidden' name='estado' value='escolher_filtros'>";
+    echo "<input type='submit' name='submit' value='submit'>";
+
+}
+
+function getSubitems($itemID){
+    //retorna array com os subitens de um item
+    $isDistinct = TRUE;
+    $collums = array("subitem.name");
+    $tables = array("subitem");
+    $conditions = array("subitem.item_id = '$itemID'");
+    $order = "(Select null)";
+
+    $result = get_select_query($isDistinct, $collums, $tables, $conditions, $order);
+
+    $subitems = array();
+    while($row = mysqli_fetch_array($result, MYSQLI_NUM)){
+        array_push($subitems, $row[0]);
+    }
+
+    return $subitems;
+}
+
 ?>
